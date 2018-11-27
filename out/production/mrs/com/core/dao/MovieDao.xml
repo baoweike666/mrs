@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+     "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.core.dao.MovieDao">
+    <!--SQL片段  -->
+    <sql id="selectMovieListWhere">
+        <where>
+	       <if test="movie_name != null" >
+	           movie_name like "%"#{movie_name}"%"
+	       </if>
+	       <if test="movie_type != null" >
+	        and movie_type = #{movie_type}
+	       </if>
+	       <if test="movie_country != null" >
+	        and movie_country = #{movie_country}
+	       </if>
+	       <if test="movie_years != null" >
+	        and movie_years = #{movie_years}
+	       </if>
+        </where>
+    </sql>
+	<!-- 查询列表  -->
+	<select id="selectMovieList" parameterType="Movie"
+                                           resultType="Movie">
+		SELECT
+			movie_id,
+			movie_name,
+			b.dict_item_name movie_type,
+			c.dict_item_name movie_country,
+			d.dict_item_name movie_years,
+			movie_avgscore
+		FROM
+			movie a
+		LEFT JOIN (
+			SELECT
+				dict_id,
+				dict_item_name
+			FROM
+				base_dict
+			WHERE
+				dict_type_code = '002'
+		) b ON a.movie_type = b.dict_id
+		LEFT JOIN (
+			SELECT
+				dict_id,
+				dict_item_name
+			FROM
+				base_dict
+			WHERE
+				dict_type_code = '001'
+		) c ON a.movie_country = c.dict_id
+		LEFT JOIN (
+			SELECT
+				dict_id,
+				dict_item_name
+			FROM
+				base_dict
+			WHERE
+				dict_type_code = '006'
+		) d ON a.movie_years = d.dict_id
+		<include refid="selectMovieListWhere"/>
+		<!-- 执行分页查询 -->
+		<if test="start !=null and rows != null">
+			limit #{start},#{rows}
+		</if>
+	</select>
+	<!-- 查询客户总数 -->
+	<select id="selectMovieListCount" parameterType="Movie" 
+                                                 resultType="Integer">
+		select count(*) from Movie
+		<include refid="selectMovieListWhere"/>
+	</select>	
+	
+	<!-- 添加客户 -->
+	<insert id="createMovie" parameterType="Movie">
+	    insert into Movie(
+	                     movie_name,
+	                     movie_type,
+	                     movie_country,
+	                     movie_years
+	             )
+	             values(#{movie_name},
+	                    #{movie_type},
+	                    #{movie_country},
+	                    #{movie_years}
+	            )
+	</insert>
+	<!-- 根据id获取信息 -->
+	<select id="getMovieById" parameterType="Integer" 
+	resultType="Movie">
+	    select * from Movie where movie_id = #{id}
+	</select>
+	<!-- 更新 -->
+	<update id="updateMovie" parameterType="Movie">
+	    update Movie
+	    <set>
+	        <if test="movie_name!=null">
+	            movie_name=#{movie_name},
+	        </if>
+	        <if test="movie_type!=null">
+	            movie_type=#{movie_type},
+	        </if>
+	        <if test="movie_country!=null">
+	            movie_country=#{movie_country},
+	        </if>
+	        <if test="movie_years!=null">
+	            movie_years=#{movie_years},
+	        </if>
+	    </set>
+	    where movie_id=#{movie_id}
+	</update>
+	<!-- 删除 -->
+	<delete id="deleteMovie" parameterType="Integer">
+	    delete from Movie where movie_id=#{id}
+	</delete>
+</mapper>
